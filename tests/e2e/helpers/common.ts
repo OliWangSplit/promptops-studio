@@ -5,7 +5,7 @@ import { expect, type Page } from '@playwright/test'
  */
 export async function waitForAppReady(page: Page): Promise<void> {
   await expect(page.locator('.loading-container')).toHaveCount(0, { timeout: 15000 })
-  await expect(page.locator('#app, [id="app"], main')).toBeAttached()
+  await expect(page.locator('#app')).toBeAttached()
 }
 
 /**
@@ -17,12 +17,12 @@ export async function navigateToMode(
   mode: 'basic' | 'pro' | 'image',
   subMode: string
 ): Promise<void> {
-  // 模拟真实用户：从 / 进入，由 RootBootstrapRoute 决定初始工作区，
-  // 然后通过顶部 CoreNav 切换到目标模式/子模式。
-  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  // PromptOps Studio owns the root route. Enter the legacy optimizer through
+  // its explicit default workspace before switching modes through CoreNav.
+  await page.goto('/#/basic/system', { waitUntil: 'domcontentloaded' })
   await waitForAppReady(page)
 
-  // RootBootstrapRoute 会把 / 重定向到某个 workspace；等到 workspace 出现即可。
+  // Wait until the legacy optimizer workspace is ready before switching mode.
   await expect(page.locator('[data-testid="workspace"]').first()).toBeVisible({ timeout: 20000 })
 
   await switchModeViaUI(page, mode, subMode)

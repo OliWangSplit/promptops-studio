@@ -298,6 +298,10 @@ export {
   PromptOpsDatabase, getPromptOpsDatabase, DexieWorkspaceRepository, DexiePromptRepository, DexiePromptVersionRepository, DexieModelInvocationRepository,
   applyPromptQuery, PromptQueryService, PromptEditorService, seedPromptOpsDatabase,
   PromptInvocationService, renderPrompt, validateOutput, normalizeTokenUsage, calculateInvocationCost,
+  DATASET_STATUSES, EVALUATION_RUN_STATUSES, EVALUATION_RESULT_STATUSES,
+  validateDataset, validateDatasetTestCase, validateTestCaseVariables, validatePlainSerializable, toPlainSerializable, parseDatasetImport,
+  DexieDatasetRepository, DexieDatasetTestCaseRepository, DexieEvaluationRunRepository, DexieEvaluationResultRepository,
+  DatasetQueryService, DatasetService, EvaluationQueryService,
   DEFAULT_WORKSPACE_ID, DEFAULT_USER,
 } from './promptops'
 export type {
@@ -311,4 +315,8 @@ export type {
   WorkspaceRepository, PromptRepository, PromptListQuery, DashboardSummary,
   PromptVersionRepository, PromptOpsPromptRecord, ModelInvocation, ModelInvocationRepository, InvocationListQuery, InvocationListResult,
   InvocationStatus, InvocationTokenUsage, InvocationCost, OutputValidationResult, PromptRenderResult, RunPromptInvocationInput, RunPromptInvocationResult,
+  Dataset, DatasetStatus, DatasetTestCase, DatasetExpectedValidation, DatasetImportDocument, DatasetImportIssue, DatasetImportPreview,
+  EvaluationRun, EvaluationRunStatus, EvaluationResult, EvaluationResultStatus, EvaluationRunConfigSnapshot, EvaluationPricingSnapshot, EvaluationTestCaseSnapshot,
+  DatasetRepository, DatasetListQuery, DatasetListResult, DatasetTestCaseRepository,
+  EvaluationRunRepository, EvaluationRunListQuery, EvaluationRunListResult, EvaluationResultRepository, EvaluationResultListQuery,
 } from './promptops'

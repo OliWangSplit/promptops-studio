@@ -3,6 +3,8 @@ import type { Prompt } from '../domain/prompt/types'
 import type { Workspace } from '../domain/workspace/types'
 import type { PromptVersion } from '../domain/prompt-version/types'
 import type { ModelInvocation } from '../domain/model-invocation/types'
+import type { Dataset, DatasetTestCase } from '../domain/dataset/types'
+import type { EvaluationResult, EvaluationRun } from '../domain/evaluation/types'
 
 export interface PromptOpsPromptRecord extends Omit<Prompt, 'owner'> {
   owner: Prompt['owner']
@@ -14,6 +16,10 @@ export class PromptOpsDatabase extends Dexie {
   prompts!: Table<PromptOpsPromptRecord, string>
   promptVersions!: Table<PromptVersion, string>
   modelInvocations!: Table<ModelInvocation, string>
+  datasets!: Table<Dataset, string>
+  datasetTestCases!: Table<DatasetTestCase, string>
+  evaluationRuns!: Table<EvaluationRun, string>
+  evaluationResults!: Table<EvaluationResult, string>
 
   constructor(name = 'PromptOpsStudioDB') {
     super(name)
@@ -44,6 +50,16 @@ export class PromptOpsDatabase extends Dexie {
       prompts: 'id, workspaceId, name, status, category, department, ownerId, riskLevel, modelProvider, modelName, createdAt, updatedAt, lastEvaluatedAt, [workspaceId+status], [workspaceId+updatedAt]',
       promptVersions: 'id, workspaceId, promptId, versionNumber, status, createdAt, [promptId+versionNumber], [promptId+createdAt]',
       modelInvocations: 'id, workspaceId, promptId, promptVersionId, provider, modelName, status, startedAt, createdAt, [workspaceId+createdAt], [promptId+createdAt], [status+createdAt]'
+    })
+    this.version(4).stores({
+      workspaces: 'id, name, createdAt, updatedAt',
+      prompts: 'id, workspaceId, name, status, category, department, ownerId, riskLevel, modelProvider, modelName, createdAt, updatedAt, lastEvaluatedAt, [workspaceId+status], [workspaceId+updatedAt]',
+      promptVersions: 'id, workspaceId, promptId, versionNumber, status, createdAt, [promptId+versionNumber], [promptId+createdAt]',
+      modelInvocations: 'id, workspaceId, promptId, promptVersionId, provider, modelName, status, startedAt, createdAt, [workspaceId+createdAt], [promptId+createdAt], [status+createdAt]',
+      datasets: 'id, workspaceId, name, status, createdAt, updatedAt, [workspaceId+status], [workspaceId+updatedAt]',
+      datasetTestCases: 'id, workspaceId, datasetId, name, createdAt, updatedAt, [datasetId+createdAt], [datasetId+updatedAt]',
+      evaluationRuns: 'id, workspaceId, datasetId, promptId, promptVersionId, providerId, modelId, modelConfigKey, status, createdAt, startedAt, completedAt, [workspaceId+createdAt], [datasetId+createdAt], [promptId+createdAt], [status+createdAt]',
+      evaluationResults: 'id, workspaceId, evaluationRunId, datasetId, testCaseId, promptId, promptVersionId, invocationId, status, createdAt, [evaluationRunId+createdAt], [testCaseId+createdAt], [invocationId+createdAt], [status+createdAt]'
     })
   }
 }
