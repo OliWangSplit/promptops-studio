@@ -561,6 +561,7 @@ import {
 import type { PersistedCompareSnapshotRoles } from '../../types/evaluation'
 import { useElementSize } from '@vueuse/core'
 import { runTasksWithExecutionMode } from '../../utils/runTasksSequentially'
+import { PromptPlaygroundBridge } from '../../services/prompt-playground-bridge'
 
 const { t } = useI18n()
 const toast = useToast()
@@ -1749,6 +1750,11 @@ const handleOpenTemplateManager = (type?: string) => {
 // ==================== 初始化 ====================
 
 onMounted(async () => {
+  const promptOpsSnapshot = PromptPlaygroundBridge.load()
+  if (promptOpsSnapshot) {
+    logic.prompt.value = promptOpsSnapshot.systemPrompt
+    logic.testContent.value = promptOpsSnapshot.userPrompt
+  }
   // 加载版本列表
   await logic.loadVersions()
   // 刷新模型和模板列表

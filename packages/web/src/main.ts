@@ -31,7 +31,7 @@ app.use(router)
 // 同步文档标题和语言属性
 if (typeof document !== 'undefined') {
   const syncDocumentTitle = () => {
-    document.title = i18n.global.t('common.appName')
+    document.title = 'PromptOps Studio'
     const currentLocale = String(i18n.global.locale.value || '')
     const htmlLang = currentLocale.startsWith('zh') ? 'zh' : 'en'
     document.documentElement.setAttribute('lang', htmlLang)

@@ -33,6 +33,8 @@
     "check:no-chinese-runtime": "node scripts/check-no-chinese-runtime.mjs",
     "check:extension-release-secrets": "node scripts/check-extension-release-secrets.mjs packages/extension/dist",
     "test:e2e": "playwright test",
+    "test:e2e:promptops": "node scripts/test-promptops-phase2.mjs",
+    "test:e2e:promptops-invocation": "node scripts/test-promptops-phase3.mjs",
     "test:e2e:smart": "node scripts/smart-e2e.js",
     "test:e2e:gate": "node scripts/run-e2e-group.js gate",
     "test:e2e:extended": "node scripts/run-e2e-group.js extended",

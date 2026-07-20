@@ -1,0 +1,2 @@
+import { DEFAULT_USER } from '@prompt-optimizer/core'
+export const PromptMetadataOptions={categories:['Customer Service','Analysis','Sales Enablement','Productivity','Risk Review','Content','Reporting','Compliance'],departments:['Marketing','Sales','Customer Experience','Product','Legal','People & Culture','Operations','PMO'],users:[DEFAULT_USER],models:{openai:['gpt-4.1-mini','gpt-4.1'],anthropic:['claude-sonnet-4'],deepseek:['deepseek-chat'],gemini:['gemini-2.5-flash']}} as const

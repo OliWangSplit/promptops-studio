@@ -289,3 +289,26 @@ export { VariableExtractionService, createVariableExtractionService } from './se
 export * from './services/variable-value-generation/types'
 export * from './services/variable-value-generation/errors'
 export { VariableValueGenerationService, createVariableValueGenerationService } from './services/variable-value-generation/service'
+
+// PromptOps Studio enterprise domain (aliases avoid legacy prompt/history type collisions)
+export {
+  PROMPT_STATUSES, createPromptOpsId, toIsoDate,
+  PROMPT_DEFAULTS, parsePromptVariables, syncPromptVariables, validatePrompt,
+  parseVersionNumber, incrementMinorVersion, incrementMajorVersion, compareVersionNumbers, isValidVersionNumber,
+  PromptOpsDatabase, getPromptOpsDatabase, DexieWorkspaceRepository, DexiePromptRepository, DexiePromptVersionRepository, DexieModelInvocationRepository,
+  applyPromptQuery, PromptQueryService, PromptEditorService, seedPromptOpsDatabase,
+  PromptInvocationService, renderPrompt, validateOutput, normalizeTokenUsage, calculateInvocationCost,
+  DEFAULT_WORKSPACE_ID, DEFAULT_USER,
+} from './promptops'
+export type {
+  EntityMetadata, Workspace, UserSummary, UserRole,
+  Prompt as PromptOpsPrompt, PromptVariable as PromptOpsPromptVariable,
+  PromptVariableType as PromptOpsPromptVariableType, PromptStatus, PromptRiskLevel,
+  PromptOutputType as PromptOpsPromptOutputType, PromptVersion as PromptOpsPromptVersion,
+  VariableDiagnostic as PromptOpsVariableDiagnostic, ParsedPromptVariable as PromptOpsParsedPromptVariable,
+  VariableParseResult as PromptOpsVariableParseResult, PromptValidationIssue as PromptOpsValidationIssue,
+  PromptValidationResult as PromptOpsValidationResult, PromptVersionStatus as PromptOpsPromptVersionStatus,
+  WorkspaceRepository, PromptRepository, PromptListQuery, DashboardSummary,
+  PromptVersionRepository, PromptOpsPromptRecord, ModelInvocation, ModelInvocationRepository, InvocationListQuery, InvocationListResult,
+  InvocationStatus, InvocationTokenUsage, InvocationCost, OutputValidationResult, PromptRenderResult, RunPromptInvocationInput, RunPromptInvocationResult,
+} from './promptops'

@@ -1,0 +1,3 @@
+<template><section class="card"><span>◇</span><h2>{{ title }}</h2><p>{{ t('promptops.common.comingSoonDescription') }}</p><RouterLink to="/dashboard">{{ t('promptops.detail.backDashboard') }}</RouterLink></section></template>
+<script setup lang="ts">import{computed}from'vue';import{RouterLink,useRoute}from'vue-router';import{useI18n}from'vue-i18n';const route=useRoute();const{t}=useI18n();const title=computed(()=>t(String(route.meta.titleKey)))</script>
+<style scoped>.card{max-width:560px;margin:60px auto;text-align:center;background:var(--n-color,#fff);border:1px solid #e5e7eb;border-radius:10px;padding:50px}.card>span{font-size:40px;color:#2563eb}.card p{color:#64748b}.card a{color:#1d4ed8}</style>

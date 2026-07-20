@@ -1,0 +1,9 @@
+import { describe,expect,it } from 'vitest'
+import { compareVersionNumbers,incrementMajorVersion,incrementMinorVersion,parsePromptVariables,syncPromptVariables,validatePrompt,type PromptVariable } from '../../../src/promptops'
+
+describe('PromptOps Phase 2 domain',()=>{
+  it('parses, de-duplicates and diagnoses variables',()=>{const result=parsePromptVariables('Hello {{name}} {{bad-name}}','Again {{name}} for {{account_2}} and {{ has_space }}');expect(result.variables).toEqual([{name:'name',sources:['system','user'],occurrences:2},{name:'account_2',sources:['user'],occurrences:1}]);expect(result.diagnostics).toHaveLength(2)})
+  it('keeps variable configuration and marks removed variables unused',()=>{const existing:PromptVariable[]=[{id:'1',name:'name',displayName:'Customer',type:'textarea',required:false,description:'Keep me'},{id:'2',name:'old',displayName:'Old',type:'text',required:true}];const synced=syncPromptVariables(existing,parsePromptVariables('{{name}} {{new_value}}',''));expect(synced[0]).toMatchObject({id:'1',type:'textarea',description:'Keep me',unused:false});expect(synced[1]).toMatchObject({name:'new_value',type:'text',required:true});expect(synced[2]).toMatchObject({name:'old',unused:true})})
+  it('increments and compares semantic prompt versions',()=>{expect(incrementMinorVersion('V1.9')).toBe('V1.10');expect(incrementMajorVersion('V2.4')).toBe('V3.0');expect(compareVersionNumbers('V1.10','V1.2')).toBeGreaterThan(0);expect(()=>incrementMinorVersion('1.0')).toThrow()})
+  it('validates required content and model limits',()=>{const result=validatePrompt({name:'',businessScenario:'',category:'',department:'',owner:{id:'',name:'',email:'',role:'viewer'},status:'draft',riskLevel:'low',systemPrompt:'',userPrompt:'',modelProvider:'',modelName:'',temperature:3,maxTokens:0,variables:[]});expect(result.valid).toBe(false);expect(result.issues.map(x=>x.field)).toContain('temperature')})
+})
