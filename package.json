@@ -37,6 +37,7 @@
     "test:e2e:promptops-invocation": "node scripts/test-promptops-phase3.mjs",
     "test:e2e:promptops-datasets": "node scripts/test-promptops-phase4-datasets.mjs",
     "test:e2e:promptops-phase4": "node scripts/test-promptops-phase4.mjs",
+    "test:e2e:promptops-phase4-acceptance": "node scripts/test-promptops-phase4-acceptance.mjs",
     "test:e2e:smart": "node scripts/smart-e2e.js",
     "test:e2e:gate": "node scripts/run-e2e-group.js gate",
     "test:e2e:extended": "node scripts/run-e2e-group.js extended",

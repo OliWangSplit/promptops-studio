@@ -323,6 +323,8 @@ Configure environment variables through the `-e` parameter when deploying with D
 ## Local Development
 For detailed documentation, see [Development Documentation](docs/developer/development.md)
 
+For the current local PromptOps Studio Phase 1–4 implementation status, Windows environment notes, verification commands, and handoff guidance, see [README-CODEX-HANDOFF.md](README-CODEX-HANDOFF.md).
+
 <details>
 <summary>Click to view local development commands</summary>
 

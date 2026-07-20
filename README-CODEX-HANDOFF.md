@@ -1,6 +1,6 @@
 # PromptOps Studio — Codex Handoff
 
-本文档用于在新的 Codex 对话中继续开发。项目基于开源 Prompt Optimizer 二次开发，当前已完成 Phase 1、Phase 2 和 Phase 3 的主体功能。
+本文档用于在新的 Codex 对话中继续开发。项目基于开源 Prompt Optimizer 二次开发，当前已完成 Phase 1–4 的 MVP 主体功能与自动化验收。
 
 ## 本地环境
 
@@ -56,7 +56,13 @@ where.exe pnpm
 
 ```powershell
 cd D:\VCproject\prompt-optimizer
-pnpm dev
+C:\nvm4w\nodejs\corepack.cmd pnpm dev
+```
+
+如果此前的开发或 E2E 服务残留并导致端口、`dist` 目录冲突，先执行：
+
+```powershell
+C:\nvm4w\nodejs\corepack.cmd pnpm kill:dev
 ```
 
 主要路由：
@@ -65,6 +71,8 @@ pnpm dev
 - Prompt Library：`http://localhost:18181/#/prompts`
 - Playground：`http://localhost:18181/#/playground`
 - Invocation History：`http://localhost:18181/#/invocations`
+- Datasets：`http://localhost:18181/#/datasets`
+- Evaluations：`http://localhost:18181/#/evaluations`
 
 后台启动日志可能位于：
 
@@ -130,9 +138,57 @@ D:\VCproject\prompt-optimizer\promptops-dev.log
 - PromptOpsStudioDB version 3 与 modelInvocations 表
 - Phase 3 Mock 浏览器 E2E，不调用真实付费 API
 
+## Phase 4 已完成
+
+### Dataset 与持久化
+
+- Dataset Library、Dataset Detail 与 Test Case CRUD
+- Search、Tag Filter、Sort、Pagination、Duplicate、Batch Delete
+- Archive、Restore 与只读状态
+- 安全 JSON Import Preview、Atomic Import 与 JSON Export
+- 阻止危险键和非 plain serializable object
+- `Dataset`、`DatasetTestCase`、`EvaluationRun`、`EvaluationResult` 领域模型
+- 四个 Repository 接口与 Dexie 实现
+- `DatasetService`、`DatasetQueryService`、`EvaluationQueryService`
+- PromptOpsStudioDB version 4，保留 version 1–3 Schema 和历史数据
+
+### Batch Evaluation Core
+
+- ModelManager config key、provider ID、model ID 三层模型身份
+- 已启用模型 DTO 与精确身份校验，不使用模糊回退作为 Evaluation 选择基础
+- ILLMService request-level Temperature、Max Tokens 和 JSON Mode 覆盖
+- 请求参数不写回持久化模型配置，并发请求相互隔离
+- Electron IPC 传递可序列化 options，不序列化 AbortSignal
+- Deterministic Evaluator：Contains、Not Contains、Exact Match、JSON、Expected JSON、JSON Field Exists
+- JSON Schema Subset：`type`、`required`、`properties`、`items`、`enum`
+- 安全 JSON 路径，不使用 `eval`，阻止危险路径
+- 有限并发队列，范围 1–10；单 Case 失败不阻止其他 Case
+- `BatchEvaluationService` 复用 `PromptInvocationService → ILLMService → Provider Adapter`
+- 输入校验失败标记 `skipped`，且不伪造 ModelInvocation
+- Provider 调用失败标记 `failed`；调用成功和规则校验通过分别统计
+- 持久化 Run 进度、结果、Token、Latency、Cost 和聚合指标
+- Token、Cost、Latency unavailable 不按 0 聚合
+- Cancel pending、Retry Entire、Retry Failed、Retry Case
+- Retry 始终创建新 Run，不覆盖原 Run/Result
+- 页面刷新中断恢复，保留已完成结果和 Invocation
+
+### Evaluation UI
+
+- Dataset Detail 的 Run Evaluation 入口
+- Prompt、不可变 PromptVersion、enabled model、Case selection 配置
+- All Cases、Selected Cases、Tag Filter
+- Temperature、Max Tokens、Concurrency 与 Pricing 状态摘要
+- `/evaluations` Evaluation History
+- `/evaluations/:evaluationRunId` Run Detail 与进度轮询
+- Invocation Success Rate、Validation Pass Rate、Latency、Token、Cost、Score 指标
+- Result Detail Drawer、逐规则诊断与 Invocation Detail 跳转
+- Retry Entire、Retry Failed、Retry Case、Cancel 和 Delete
+- Sidebar、Router、英文、简体中文、繁体中文 locale
+- Mock Batch E2E 与完整 Phase 4 Acceptance E2E，不调用真实 API
+
 ## 数据库
 
-当前数据库：`PromptOpsStudioDB version 3`。
+当前数据库：`PromptOpsStudioDB version 4`。
 
 表：
 
@@ -140,8 +196,12 @@ D:\VCproject\prompt-optimizer\promptops-dev.log
 - `prompts`
 - `promptVersions`
 - `modelInvocations`
+- `datasets`
+- `datasetTestCases`
+- `evaluationRuns`
+- `evaluationResults`
 
-Invocation 保存变量值、渲染 Prompt、输出、状态、延迟、Token、成本和校验结果；不保存 API Key、Authorization Header、Provider Secret、内部堆栈、Vue Proxy 或 AbortController。
+Invocation 保存变量值、渲染 Prompt、输出、状态、延迟、Token、成本和校验结果；EvaluationRun 保存不可变配置快照，EvaluationResult 保存 Test Case 与规则运行时快照。数据库不保存 API Key、Authorization Header、Provider Secret、内部堆栈、Vue Proxy 或 AbortController。
 
 ## 测试状态
 
@@ -152,7 +212,7 @@ Invocation 保存变量值、渲染 Prompt、输出、状态、延迟、Token、
 - `pnpm typecheck:web`
 - Repository tests：45/45
 - Core Gate：21/21
-- UI tests：925 passed，1 todo
+- UI tests：928 passed，1 todo
 - Locale parity
 - No-Chinese runtime check
 - `git diff --check`
@@ -160,15 +220,21 @@ Invocation 保存变量值、渲染 Prompt、输出、状态、延迟、Token、
 - `pnpm build:web`
 - Phase 2 E2E
 - Phase 3 Mock Invocation E2E
+- Dataset E2E
+- Phase 4 Mock Batch E2E
+- Phase 4 完整 Acceptance E2E
 
 运行浏览器测试：
 
 ```powershell
 pnpm test:e2e:promptops
 pnpm test:e2e:promptops-invocation
+pnpm test:e2e:promptops-datasets
+pnpm test:e2e:promptops-phase4
+pnpm test:e2e:promptops-phase4-acceptance
 ```
 
-Phase 3 E2E 使用 Mock 模型，不消耗真实 API。
+Phase 3 和 Phase 4 E2E 使用 Mock 模型，不消耗真实 API。Phase 4 Acceptance 会创建 6 个 Case，验证 succeeded/failed/skipped、规则失败不等于调用失败、Token/Cost unavailable、Result/Invocation Detail、Retry、中断恢复和 History 持久化。
 
 ## 当前真实 OpenAI 调用状态
 
@@ -198,18 +264,18 @@ openai / gpt-4.1-mini
 
 - 当前仍是单用户 IndexedDB MVP。
 - 浏览器端 API Key 不适合公开生产部署。
-- 现有 ILLMService 没有统一 AbortSignal，因此 UI 明确显示 Stop unavailable。
+- Electron IPC 和部分 Provider 没有统一 AbortSignal，因此运行中请求可能无法真正中止。
 - Provider 统一接口通常只返回 total tokens；缺少 input/output 时显示 unavailable。
 - Pricing 为本地静态配置，不自动更新。
-- Playground 的 Provider/Model 当前仍是文本输入，应改为读取 ModelManager 中已启用模型的下拉列表。
-- 应修复旧种子 Prompt 的 `gpt-4.1-mini` 与当前 OpenAI 默认 `gpt-5-mini` 不一致。
-- Invocation 必须记录实际调用的模型配置，不能静默调用一个模型却记录另一个模型名。
-- Playground 中临时 Temperature/Max Tokens 的底层请求级覆盖能力仍需与现有 ILLMService 明确对接。
-- 尚未实现 Dataset、Batch Evaluation、A/B Experiment、Approval 和服务端权限审计。
+- 浏览器刷新会中断正在运行的 Evaluation；当前通过恢复规则标记中断，不会在后台继续。
+- JSON Schema 仅支持明确子集，不是完整 JSON Schema 标准实现。
+- Evaluation History 的高级组合筛选和可编辑 Duplicate Configuration 流程仍可增强。
+- 旧种子 Prompt 名称不做静默 migration；Evaluation 必须显式选择实际 enabled model config。
+- 尚未实现 A/B Experiment、LLM-as-a-Judge、多模型比较、Approval Workflow 和服务端权限审计。
 
 ## 工作区状态
 
-Phase 1–3 的改动目前位于工作区中，包含较多未提交文件。不要 reset、checkout 或覆盖现有修改；不要删除用户数据或 Phase 1/2 功能。执行修改前先运行：
+Phase 1–4 的改动目前位于工作区中，包含较多未提交文件。不要 reset、checkout 或覆盖现有修改；不要删除用户数据、PromptVersion、ModelInvocation 或 Phase 1–4 功能。执行修改前先运行：
 
 ```powershell
 git status --short
@@ -221,5 +287,5 @@ git diff --check
 在新的 Codex 对话中发送：
 
 ```text
-请先阅读 D:\VCproject\prompt-optimizer\README-CODEX-HANDOFF.md，检查当前仓库实际代码和 git status，然后继续 PromptOps Studio 开发。不要覆盖 Phase 1–3 已完成内容，不要删除文件。下一步优先修复 Playground 的模型选择：从现有 ModelManager 获取已启用模型，保证实际调用模型与 Invocation 记录一致，并处理旧种子 Prompt gpt-4.1-mini 与当前 gpt-5-mini 的不一致。完成后运行相关 typecheck、unit tests、Phase 2/3 E2E 和 build:web。
+请先完整阅读 D:\VCproject\prompt-optimizer\README-CODEX-HANDOFF.md，检查当前仓库实际代码与 git status，然后继续 PromptOps Studio 开发。不要覆盖 Phase 1–4 已完成内容，不要修改历史 PromptVersion、ModelInvocation、EvaluationRun 或 EvaluationResult，不要清空 IndexedDB。下一步先核对未提交改动和实际测试状态，再规划 Phase 4 收尾增强或 Phase 5；不要提前把未实现能力写成完成。修改后运行相关 typecheck、定向测试、locale/runtime、build 和 Mock E2E。
 ```
