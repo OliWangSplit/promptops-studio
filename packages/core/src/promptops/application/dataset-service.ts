@@ -1,5 +1,5 @@
 import type { Dataset, DatasetImportPreview, DatasetTestCase } from '../domain/dataset/types'
-import { parseDatasetImport } from '../domain/dataset/import-export'
+import { exportDatasetDocument, parseDatasetImport } from '../domain/dataset/import-export'
 import { createPromptOpsId, toIsoDate } from '../domain/shared/types'
 import type { PromptOpsDatabase } from '../persistence/promptops-db'
 import type { DatasetRepository } from '../repositories/dataset-repository'
@@ -14,6 +14,11 @@ export class DatasetService {
   async addTestCase(datasetId: string, input: Omit<DatasetTestCase, 'id' | 'workspaceId' | 'datasetId' | 'createdAt' | 'updatedAt'>): Promise<DatasetTestCase> { const dataset = await this.requiredDataset(datasetId); const now = toIsoDate(); return this.testCases.create({ ...input, id: createPromptOpsId(), workspaceId: dataset.workspaceId, datasetId, name: input.name.trim(), createdAt: now, updatedAt: now }) }
   async updateTestCase(value: DatasetTestCase): Promise<DatasetTestCase> { return this.testCases.update({ ...value, name: value.name.trim(), updatedAt: toIsoDate() }) }
   async duplicateTestCase(id: string, name?: string): Promise<DatasetTestCase> { const source = await this.testCases.getById(id); if (!source) throw new Error(`Test case not found: ${id}`); const now = toIsoDate(); return this.testCases.create({ ...source, id: createPromptOpsId(), name: name?.trim() || `${source.name} (Copy)`, createdAt: now, updatedAt: now }) }
+  async deleteTestCase(id: string): Promise<void> { await this.testCases.delete(id) }
+  async deleteTestCases(datasetId: string, ids: string[]): Promise<void> { const unique = [...new Set(ids)]; await this.db.transaction('rw', this.db.datasetTestCases, async () => { for (const id of unique) { const item = await this.testCases.getById(id); if (!item || item.datasetId !== datasetId) throw new Error(`Test case not found in dataset: ${id}`); await this.testCases.delete(id) } }) }
+  async archive(id: string): Promise<void> { await this.datasets.archive(id) }
+  async restore(id: string): Promise<void> { await this.datasets.restore(id) }
+  async exportDocument(id: string) { const dataset = await this.requiredDataset(id); return exportDatasetDocument(dataset, await this.testCases.listByDatasetId(id)) }
   previewImport(text: string): DatasetImportPreview { return parseDatasetImport(text) }
   async importAtomic(workspaceId: string, preview: DatasetImportPreview): Promise<Dataset> { if (!preview.valid || !preview.document) throw new Error('A valid import preview is required'); const document = preview.document; const now = toIsoDate(); const dataset: Dataset = { id: createPromptOpsId(), workspaceId, name: document.dataset.name.trim(), description: document.dataset.description?.trim() ?? '', status: 'active', createdAt: now, updatedAt: now }; await this.db.transaction('rw', this.db.datasets, this.db.datasetTestCases, async () => { await this.datasets.create(dataset); for (const item of document.testCases) await this.testCases.create({ ...item, id: createPromptOpsId(), workspaceId, datasetId: dataset.id, name: item.name.trim(), createdAt: now, updatedAt: now }) }); return dataset }
   private async requiredDataset(id: string) { const value = await this.datasets.getById(id); if (!value) throw new Error(`Dataset not found: ${id}`); return value }

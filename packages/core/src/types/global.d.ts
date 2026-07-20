@@ -13,8 +13,8 @@ interface Window {
   electronAPI?: {
     llm: {
       // Define the methods for the LLM API proxy
-      sendMessage: (messages: any[], provider: string) => Promise<string>;
-      sendMessageStructured: (messages: any[], provider: string) => Promise<any>;
+      sendMessage: (messages: any[], provider: string, options?: any) => Promise<string>;
+      sendMessageStructured: (messages: any[], provider: string, options?: any) => Promise<any>;
       sendMessageStream: (
         messages: any[],
         provider: string,
@@ -24,7 +24,8 @@ interface Window {
           onToolCall?: (toolCall: any) => void;
           onFinish?: () => void;
           onError?: (error: Error) => void;
-        }
+        },
+        options?: any
       ) => Promise<void>;
       sendMessageStreamWithTools?: (
         messages: any[],
@@ -36,7 +37,8 @@ interface Window {
           onToolCall?: (toolCall: any) => void;
           onFinish?: () => void;
           onError?: (error: Error) => void;
-        }
+        },
+        options?: any
       ) => Promise<void>;
       testConnection: (provider: string) => Promise<void>;
       fetchModelList: (provider: string, customConfig?: any) => Promise<Array<{value: string, label: string}>>;

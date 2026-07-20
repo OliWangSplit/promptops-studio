@@ -24,7 +24,7 @@ const groups = [
   { label: 'promptops.nav.promptManagement', items: [
     { path: '/prompts', label: 'promptops.nav.prompts', icon: 'P' }, { path: '/playground', label: 'promptops.nav.playground', icon: '▶' },
     { path: '/invocations', label: 'promptops.nav.invocations', icon: 'H' },
-    { path: '/datasets', label: 'promptops.nav.datasets', icon: '▤', soon: true }, { path: '/evaluations', label: 'promptops.nav.evaluations', icon: '✓', soon: true },
+    { path: '/datasets', label: 'promptops.nav.datasets', icon: '▤' }, { path: '/evaluations', label: 'promptops.nav.evaluations', icon: '✓' },
     { path: '/experiments', label: 'promptops.nav.experiments', icon: '⇄', soon: true },
   ]},
   { label: 'promptops.nav.governance', items: [

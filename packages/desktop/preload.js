@@ -109,8 +109,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
 
     // Send a simple message
-    sendMessage: async (messages, provider) => {
-      const result = await ipcRenderer.invoke('llm-sendMessage', messages, provider);
+    sendMessage: async (messages, provider, options) => {
+      const result = await ipcRenderer.invoke('llm-sendMessage', messages, provider, options);
       if (!result.success) {
         throw createIpcError(result.error);
       }
@@ -118,8 +118,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
 
     // Send a structured message
-    sendMessageStructured: async (messages, provider) => {
-      const result = await ipcRenderer.invoke('llm-sendMessageStructured', messages, provider);
+    sendMessageStructured: async (messages, provider, options) => {
+      const result = await ipcRenderer.invoke('llm-sendMessageStructured', messages, provider, options);
       if (!result.success) {
         throw createIpcError(result.error);
       }
@@ -136,7 +136,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
 
     // Send streaming message
-    sendMessageStream: async (messages, provider, callbacks) => {
+    sendMessageStream: async (messages, provider, callbacks, options) => {
       const streamId = generateStreamId();
       
       // Set up event listeners for streaming responses
@@ -171,7 +171,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
       // Send the streaming request
       try {
-        const result = await ipcRenderer.invoke('llm-sendMessageStream', messages, provider, streamId);
+        const result = await ipcRenderer.invoke('llm-sendMessageStream', messages, provider, streamId, options);
         if (!result.success) {
           cleanup();
           throw createIpcError(result.error);
@@ -183,7 +183,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
 
     // Send streaming message with tools (supports tool-call events)
-    sendMessageStreamWithTools: async (messages, provider, tools, callbacks) => {
+    sendMessageStreamWithTools: async (messages, provider, tools, callbacks, options) => {
       const streamId = generateStreamId();
 
       // Set up event listeners for streaming responses
@@ -228,7 +228,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
           messages,
           provider,
           tools,
-          streamId
+          streamId,
+          options
         );
         if (!result.success) {
           cleanup();

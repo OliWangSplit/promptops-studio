@@ -1,5 +1,5 @@
-import type { DatasetExpectedValidation, DatasetImportDocument, DatasetImportIssue, DatasetImportPreview } from './types'
-import { isPlainObject, validatePlainSerializable } from './validation'
+import type { Dataset, DatasetExpectedValidation, DatasetImportDocument, DatasetImportIssue, DatasetImportPreview, DatasetTestCase } from './types'
+import { isPlainObject, toPlainSerializable, validatePlainSerializable } from './validation'
 
 const stringArray = (value: unknown): value is string[] => Array.isArray(value) && value.every(item => typeof item === 'string')
 
@@ -62,3 +62,16 @@ export const parseDatasetImport = (text: string): DatasetImportPreview => {
   }
   return { valid: true, strategy: 'atomic', document, issues: [], acceptedCaseCount: document.testCases.length }
 }
+
+export const exportDatasetDocument = (dataset: Dataset, testCases: DatasetTestCase[]): DatasetImportDocument => toPlainSerializable({
+  schemaVersion: 1,
+  dataset: { name: dataset.name, ...(dataset.description ? { description: dataset.description } : {}) },
+  testCases: testCases.map(item => ({
+    name: item.name,
+    ...(item.description ? { description: item.description } : {}),
+    variables: item.variables,
+    ...(item.expectedOutput !== undefined ? { expectedOutput: item.expectedOutput } : {}),
+    ...(item.expectedValidation ? { expectedValidation: item.expectedValidation } : {}),
+    ...(item.tags?.length ? { tags: item.tags } : {}),
+  })),
+})

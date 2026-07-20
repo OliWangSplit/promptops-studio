@@ -187,6 +187,13 @@ export interface ModelOption {
 /**
  * LLM服务接口
  */
+export interface LLMRequestOptions {
+  temperature?: number;
+  maxTokens?: number;
+  jsonMode?: boolean;
+  signal?: AbortSignal;
+}
+
 export interface ILLMService {
   /**
    * 发送消息（传统格式，返回合并的字符串）
@@ -194,14 +201,14 @@ export interface ILLMService {
    * @throws {RequestConfigError} 当参数无效时
    * @throws {APIError} 当请求失败时
    */
-  sendMessage(messages: Message[], provider: string): Promise<string>;
+  sendMessage(messages: Message[], provider: string, options?: LLMRequestOptions): Promise<string>;
 
   /**
    * 发送消息（结构化格式）
    * @throws {RequestConfigError} 当参数无效时
    * @throws {APIError} 当请求失败时
    */
-  sendMessageStructured(messages: Message[], provider: string): Promise<LLMResponse>;
+  sendMessageStructured(messages: Message[], provider: string, options?: LLMRequestOptions): Promise<LLMResponse>;
 
 
 
@@ -213,7 +220,8 @@ export interface ILLMService {
   sendMessageStream(
     messages: Message[],
     provider: string,
-    callbacks: StreamHandlers
+    callbacks: StreamHandlers,
+    options?: LLMRequestOptions
   ): Promise<void>;
 
   /**
@@ -225,7 +233,8 @@ export interface ILLMService {
     messages: Message[],
     provider: string,
     tools: ToolDefinition[],
-    callbacks: StreamHandlers
+    callbacks: StreamHandlers,
+    options?: LLMRequestOptions
   ): Promise<void>;
 
   /**

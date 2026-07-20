@@ -1,4 +1,4 @@
-import { ILLMService, Message, StreamHandlers, LLMResponse, ModelOption, ToolDefinition } from './types';
+import { ILLMService, Message, StreamHandlers, LLMResponse, ModelOption, ToolDefinition, LLMRequestOptions } from './types';
 import { safeSerializeForIPC } from '../../utils/ipc-serialization';
 import { InitializationError } from './errors';
 
@@ -21,22 +21,23 @@ export class ElectronLLMProxy implements ILLMService {
     await this.electronAPI.llm.testConnection(provider);
   }
 
-  async sendMessage(messages: Message[], provider: string): Promise<string> {
+  async sendMessage(messages: Message[], provider: string, options?: LLMRequestOptions): Promise<string> {
     // 自动序列化，防止Vue响应式对象IPC传递错误
     const safeMessages = safeSerializeForIPC(messages);
-    return this.electronAPI.llm.sendMessage(safeMessages, provider);
+    return this.electronAPI.llm.sendMessage(safeMessages, provider, serializableOptions(options));
   }
 
-  async sendMessageStructured(messages: Message[], provider: string): Promise<LLMResponse> {
+  async sendMessageStructured(messages: Message[], provider: string, options?: LLMRequestOptions): Promise<LLMResponse> {
     // 自动序列化，防止Vue响应式对象IPC传递错误
     const safeMessages = safeSerializeForIPC(messages);
-    return this.electronAPI.llm.sendMessageStructured(safeMessages, provider);
+    return this.electronAPI.llm.sendMessageStructured(safeMessages, provider, serializableOptions(options));
   }
 
   async sendMessageStream(
     messages: Message[],
     provider: string,
-    callbacks: StreamHandlers
+    callbacks: StreamHandlers,
+    options?: LLMRequestOptions
   ): Promise<void> {
     // 自动序列化，防止Vue响应式对象IPC传递错误
     const safeMessages = safeSerializeForIPC(messages);
@@ -49,14 +50,15 @@ export class ElectronLLMProxy implements ILLMService {
       onError: callbacks.onError
     };
 
-    await this.electronAPI.llm.sendMessageStream(safeMessages, provider, adaptedCallbacks);
+    await this.electronAPI.llm.sendMessageStream(safeMessages, provider, adaptedCallbacks, serializableOptions(options));
   }
 
   async sendMessageStreamWithTools(
     messages: Message[],
     provider: string,
     tools: ToolDefinition[],
-    callbacks: StreamHandlers
+    callbacks: StreamHandlers,
+    options?: LLMRequestOptions
   ): Promise<void> {
     // 自动序列化，防止Vue响应式对象IPC传递错误
     const safeMessages = safeSerializeForIPC(messages);
@@ -74,12 +76,12 @@ export class ElectronLLMProxy implements ILLMService {
     // Prefer the dedicated tools-capable streaming channel when available.
     const maybe = this.electronAPI.llm.sendMessageStreamWithTools;
     if (typeof maybe === 'function') {
-      await maybe(safeMessages, provider, safeTools, adaptedCallbacks);
+      await maybe(safeMessages, provider, safeTools, adaptedCallbacks, serializableOptions(options));
       return;
     }
 
     // Back-compat fallback (older preload/main): stream without tool-call events.
-    await this.electronAPI.llm.sendMessageStream(safeMessages, provider, adaptedCallbacks);
+    await this.electronAPI.llm.sendMessageStream(safeMessages, provider, adaptedCallbacks, serializableOptions(options));
   }
 
   async fetchModelList(
@@ -90,4 +92,10 @@ export class ElectronLLMProxy implements ILLMService {
     const safeCustomConfig = customConfig ? safeSerializeForIPC(customConfig) : customConfig;
     return this.electronAPI.llm.fetchModelList(provider, safeCustomConfig);
   }
-} 
+}
+
+function serializableOptions(options?: LLMRequestOptions): Omit<LLMRequestOptions, 'signal'> | undefined {
+  if (!options) return undefined;
+  const { signal: _signal, ...serializable } = options;
+  return safeSerializeForIPC(serializable);
+}

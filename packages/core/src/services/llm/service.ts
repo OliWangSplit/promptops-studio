@@ -6,7 +6,8 @@ import type {
   ModelOption,
   ToolDefinition,
   TextModel,
-  ITextAdapterRegistry
+  ITextAdapterRegistry,
+  LLMRequestOptions
 } from './types';
 import type { TextModelConfig, ModelConfig } from '../model/types';
 import { ModelManager } from '../model/manager';
@@ -79,7 +80,7 @@ export class LLMService implements ILLMService {
   /**
    * 发送消息（结构化格式）
    */
-  async sendMessageStructured(messages: Message[], provider: string): Promise<LLMResponse> {
+  async sendMessageStructured(messages: Message[], provider: string, options?: LLMRequestOptions): Promise<LLMResponse> {
     try {
       if (!provider) {
         throw new RequestConfigError('Model provider cannot be empty');
@@ -96,7 +97,7 @@ export class LLMService implements ILLMService {
       // 通过 Registry 获取 Adapter
       const adapter = this.registry.getAdapter(modelConfig.providerMeta.id);
 
-      const runtimeConfig = this.prepareRuntimeConfig(modelConfig);
+      const runtimeConfig = this.prepareRuntimeConfig(modelConfig, options);
 
       // 使用 Adapter 发送消息
       return await adapter.sendMessage(messages, runtimeConfig);
@@ -112,8 +113,8 @@ export class LLMService implements ILLMService {
   /**
    * 发送消息（传统格式，只返回主要内容）
    */
-  async sendMessage(messages: Message[], provider: string): Promise<string> {
-    const response = await this.sendMessageStructured(messages, provider);
+  async sendMessage(messages: Message[], provider: string, options?: LLMRequestOptions): Promise<string> {
+    const response = await this.sendMessageStructured(messages, provider, options);
     
     // 只返回主要内容，不包含推理内容
     // 如果需要推理内容，请使用 sendMessageStructured 方法
@@ -126,7 +127,8 @@ export class LLMService implements ILLMService {
   async sendMessageStream(
     messages: Message[],
     provider: string,
-    callbacks: StreamHandlers
+    callbacks: StreamHandlers,
+    options?: LLMRequestOptions
   ): Promise<void> {
     try {
       this.validateMessages(messages);
@@ -141,7 +143,7 @@ export class LLMService implements ILLMService {
       // 通过 Registry 获取 Adapter
       const adapter = this.registry.getAdapter(modelConfig.providerMeta.id);
 
-      const runtimeConfig = this.prepareRuntimeConfig(modelConfig);
+      const runtimeConfig = this.prepareRuntimeConfig(modelConfig, options);
 
       // 使用 Adapter 发送流式消息
       await adapter.sendMessageStream(messages, runtimeConfig, callbacks);
@@ -161,7 +163,8 @@ export class LLMService implements ILLMService {
     messages: Message[],
     provider: string,
     tools: ToolDefinition[],
-    callbacks: StreamHandlers
+    callbacks: StreamHandlers,
+    options?: LLMRequestOptions
   ): Promise<void> {
     try {
       this.validateMessages(messages);
@@ -176,7 +179,7 @@ export class LLMService implements ILLMService {
       // 通过 Registry 获取 Adapter
       const adapter = this.registry.getAdapter(modelConfig.providerMeta.id);
 
-      const runtimeConfig = this.prepareRuntimeConfig(modelConfig);
+      const runtimeConfig = this.prepareRuntimeConfig(modelConfig, options);
 
       // 使用 Adapter 发送带工具的流式消息
       await adapter.sendMessageStreamWithTools(messages, runtimeConfig, tools, callbacks);
@@ -279,7 +282,7 @@ export class LLMService implements ILLMService {
     }
   }
 
-  private prepareRuntimeConfig(modelConfig: TextModelConfig): TextModelConfig {
+  private prepareRuntimeConfig(modelConfig: TextModelConfig, options?: LLMRequestOptions): TextModelConfig {
     const schema = modelConfig.modelMeta?.parameterDefinitions ?? [];
 
     // 合并参数：支持旧格式的 customParamOverrides（向后兼容）
@@ -289,9 +292,23 @@ export class LLMService implements ILLMService {
     const mergedOverrides = mergeOverrides({
       schema,
       includeDefaults: false,
-      customOverrides: modelConfig.customParamOverrides,  // 🔧 兼容旧格式：自定义参数
-      requestOverrides: modelConfig.paramOverrides        // 当前参数（包含内置 + 可能已合并的自定义）
+      customOverrides: modelConfig.customParamOverrides,
+      requestOverrides: {
+        ...(modelConfig.paramOverrides ?? {}),
+        ...(options?.temperature === undefined ? {} : { temperature: options.temperature }),
+        ...(options?.maxTokens === undefined ? {} : { max_tokens: options.maxTokens }),
+        ...(options?.jsonMode === undefined ? {} : {
+          response_format: options.jsonMode ? { type: 'json_object' } : undefined
+        })
+      }
     });
+    // Request-scoped controls are trusted typed fields, not arbitrary custom keys.
+    // Overlay them after schema filtering so custom model metadata cannot drop them.
+    if (options?.temperature !== undefined) mergedOverrides.temperature = options.temperature;
+    if (options?.maxTokens !== undefined) mergedOverrides.max_tokens = options.maxTokens;
+    if (options?.jsonMode !== undefined) {
+      mergedOverrides.response_format = options.jsonMode ? { type: 'json_object' } : undefined;
+    }
 
     return {
       ...modelConfig,

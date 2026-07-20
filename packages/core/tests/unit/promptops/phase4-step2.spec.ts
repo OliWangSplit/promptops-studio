@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import {
   DatasetQueryService,
   DatasetService,
+  exportDatasetDocument,
   DexieDatasetRepository,
   DexieDatasetTestCaseRepository,
   DexieEvaluationResultRepository,
@@ -65,6 +66,14 @@ describe('Phase 4 dataset persistence', () => {
 })
 
 describe('Phase 4 JSON import', () => {
+  it('exports a plain schemaVersion 1 document that round-trips including Unicode', () => {
+    const dataset: Dataset = { id:'d',workspaceId:'w',name:'中文资料集',description:'回归',status:'active',createdAt:'2026-01-01',updatedAt:'2026-01-01' }
+    const testCase: DatasetTestCase = { id:'c',workspaceId:'w',datasetId:'d',name:'案例',variables:{主题:'人工智能'},expectedOutput:'摘要',expectedValidation:{contains:['摘要']},tags:['冒烟'],createdAt:'2026-01-01',updatedAt:'2026-01-01' }
+    const exported = exportDatasetDocument(dataset,[testCase])
+    expect(exported).toMatchObject({schemaVersion:1,dataset:{name:'中文资料集'},testCases:[{name:'案例',variables:{主题:'人工智能'}}]})
+    expect(JSON.stringify(exported)).not.toContain('workspaceId')
+    expect(parseDatasetImport(JSON.stringify(exported))).toMatchObject({valid:true,acceptedCaseCount:1})
+  })
   it('returns a safe atomic preview with case-specific errors', () => {
     const valid = parseDatasetImport(JSON.stringify({ schemaVersion: 1, dataset: { name: 'Regression' }, testCases: [{ name: 'Case 1', variables: { topic: 'AI' }, expectedValidation: { contains: ['summary'] } }] }))
     expect(valid).toMatchObject({ valid: true, strategy: 'atomic', acceptedCaseCount: 1 })

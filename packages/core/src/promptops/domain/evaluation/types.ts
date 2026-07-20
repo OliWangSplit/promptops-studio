@@ -1,6 +1,7 @@
 import type { DatasetExpectedValidation } from '../dataset/types'
 import type { InvocationCost, InvocationTokenUsage } from '../model-invocation/types'
 import type { OutputValidationResult } from '../output-validation/types'
+import type { DeterministicEvaluationResult } from './evaluator-types'
 
 export const EVALUATION_RUN_STATUSES = ['queued', 'running', 'completed', 'completed_with_errors', 'failed', 'cancelled'] as const
 export type EvaluationRunStatus = typeof EVALUATION_RUN_STATUSES[number]
@@ -36,6 +37,17 @@ export interface EvaluationRun {
   status: EvaluationRunStatus
   configSnapshot: EvaluationRunConfigSnapshot
   totalCases: number
+  queuedCases?: number
+  runningCases?: number
+  succeededCases?: number
+  failedCases?: number
+  skippedCases?: number
+  cancelledCases?: number
+  completedCases?: number
+  progressPercent?: number
+  metrics?: EvaluationAggregateMetrics
+  sourceRunId?: string
+  interruptionReason?: string
   startedAt?: string
   completedAt?: string
   createdAt: string
@@ -65,7 +77,8 @@ export interface EvaluationResult {
   validationRulesSnapshot?: DatasetExpectedValidation
   variableValidation: { valid: boolean; diagnostics: Array<{ code: string; variable: string; message: string }>; extraVariables: string[] }
   outputValidation?: OutputValidationResult
-  deterministicValidation?: { valid: boolean; diagnostics: Array<{ rule: string; message: string }> }
+  deterministicValidation?: DeterministicEvaluationResult
+  rawOutput?: string
   latencyMs?: number
   timeToFirstTokenMs?: number
   tokenUsage: InvocationTokenUsage
@@ -76,4 +89,34 @@ export interface EvaluationResult {
   startedAt?: string
   completedAt?: string
   createdAt: string
+}
+
+export interface EvaluationAggregateMetrics {
+  totalCases: number
+  invocationSucceeded: number
+  invocationFailed: number
+  skipped: number
+  cancelled: number
+  validationPassed: number
+  validationFailed: number
+  invocationSuccessRate?: number
+  validationPassRate?: number
+  averageLatencyMs?: number
+  p50LatencyMs?: number
+  p95LatencyMs?: number
+  averageTimeToFirstTokenMs?: number
+  totalInputTokens: number
+  totalOutputTokens: number
+  totalTokens: number
+  availableTokenCases: number
+  unavailableTokenCases: number
+  totalCost?: number
+  averageCost?: number
+  availableCostCases: number
+  unavailableCostCases: number
+  currency?: string
+  mixedCurrencies: boolean
+  averageDeterministicScore?: number
+  applicableScoredCases: number
+  unscoredCases: number
 }

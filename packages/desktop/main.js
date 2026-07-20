@@ -926,18 +926,18 @@ function setupIPC() {
     }
   });
 
-  ipcMain.handle('llm-sendMessage', async (event, messages, provider) => {
+  ipcMain.handle('llm-sendMessage', async (event, messages, provider, options) => {
     try {
-      const result = await llmService.sendMessage(messages, provider);
+      const result = await llmService.sendMessage(messages, provider, options);
       return createSuccessResponse(result);
     } catch (error) {
       return createErrorResponse(error);
     }
   });
 
-  ipcMain.handle('llm-sendMessageStructured', async (event, messages, provider) => {
+  ipcMain.handle('llm-sendMessageStructured', async (event, messages, provider, options) => {
     try {
-      const result = await llmService.sendMessageStructured(messages, provider);
+      const result = await llmService.sendMessageStructured(messages, provider, options);
       return createSuccessResponse(result);
     } catch (error) {
       return createErrorResponse(error);
@@ -963,7 +963,7 @@ function setupIPC() {
   });
 
   // Streaming handler - more complex due to callbacks
-  ipcMain.handle('llm-sendMessageStream', async (event, messages, provider, streamId) => {
+  ipcMain.handle('llm-sendMessageStream', async (event, messages, provider, streamId, options) => {
     try {
       // 使用符合 StreamHandlers 接口的回调名称
       const callbacks = {
@@ -989,7 +989,7 @@ function setupIPC() {
         }
       };
 
-      await llmService.sendMessageStream(messages, provider, callbacks);
+      await llmService.sendMessageStream(messages, provider, callbacks, options);
       return createSuccessResponse(null);
     } catch (error) {
       return createErrorResponse(error);
@@ -997,7 +997,7 @@ function setupIPC() {
   });
 
   // Streaming handler with tools - supports tool-call events
-  ipcMain.handle('llm-sendMessageStreamWithTools', async (event, messages, provider, tools, streamId) => {
+  ipcMain.handle('llm-sendMessageStreamWithTools', async (event, messages, provider, tools, streamId, options) => {
     try {
       const callbacks = {
         onToken: (token) => {
@@ -1027,7 +1027,7 @@ function setupIPC() {
         }
       };
 
-      await llmService.sendMessageStreamWithTools(messages, provider, tools, callbacks);
+      await llmService.sendMessageStreamWithTools(messages, provider, tools, callbacks, options);
       return createSuccessResponse(null);
     } catch (error) {
       return createErrorResponse(error);

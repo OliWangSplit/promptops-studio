@@ -104,6 +104,16 @@ const ENFORCED_TARGETS = [
   'packages/ui/src/stores/session/useSessionManager.ts',
   'packages/ui/src/stores/settings/useGlobalSettings.ts',
   'packages/ui/src/composables/variable/',
+  'packages/ui/src/components/promptops/datasets/',
+  'packages/ui/src/pages/datasets/',
+  'packages/ui/src/components/promptops/evaluations/',
+  'packages/ui/src/pages/evaluations/',
+  'packages/ui/src/stores/promptops/useDatasetUiStore.ts',
+  'packages/core/src/promptops/domain/dataset/',
+  'packages/core/src/promptops/application/dataset-service.ts',
+  'packages/core/src/promptops/application/batch-evaluation-service.ts',
+  'packages/core/src/promptops/application/enabled-model-options.ts',
+  'packages/core/src/promptops/domain/evaluation/',
 ]
 
 export function containsChinese(text) {
